@@ -1,0 +1,33 @@
+{
+  "name": "sails-generate-ng-admin",
+  "version": "0.0.1",
+  "description": "Admin interface generator for Sails leveraging ng-admin",
+  "main": "Generator.js",
+  "keywords": [
+    "admin",
+    "sails",
+    "ng-admin",
+    "generator",
+    "generate",
+    "plugin"
+  ],
+  "author": "zvesp",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": ">=2.4.x",
+    "merge-defaults": ">=0.1.0",
+    "ng-admin": "git://github.com/marmelab/ng-admin#v0.4.0",
+    "angular": "~1.3.10",
+    "bootstrap": "~3.3.2"
+  },
+  "devDependencies": {
+    "sails-generate": "*",
+    "reportback": "*",
+    "fs-extra": "*"
+  },
+  "sailsGenerator": {
+    "type": "ng-admin",
+    "behavior": "enables `sails generate ng-admin`",
+    "sailsVersion": "~0.10.0"
+  }
+}
