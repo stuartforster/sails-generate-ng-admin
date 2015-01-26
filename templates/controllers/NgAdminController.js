@@ -71,7 +71,8 @@ module.exports = (function() {
           if ('updatedAt' === field.name || 'id' === field.name) {
             return false;
           }
-          return true;
+          // Ensures we don't include this field if related field is absent:
+          return ! fieldLacksRelated(field);
         }
 
         /**
@@ -84,6 +85,16 @@ module.exports = (function() {
         }
 
         /**
+         * True iff the field refers to a model which we're not representing.
+         * @param field
+         * @returns {boolean}
+         */
+        function fieldLacksRelated(field) {
+          var refdModel = field.collection || field.model;
+          return !! refdModel && ! modelDefs[refdModel];
+        }
+
+        /**
          * Whether a given field should by default appear as a link, if it's in the List view.
          * @param field
          * @returns {boolean}
@@ -93,7 +104,6 @@ module.exports = (function() {
         }
 
         function ngAdminFieldType(field) {
-//        return 'string';
           switch (field.type) {
             case 'integer':
             case 'float':
@@ -125,7 +135,7 @@ module.exports = (function() {
         /**
          * Client-side JS code for making the ng-admin field
          */
-        function fieldFactory(field, forView) {
+        function fieldFactory(field) {
 
           function fieldConstructor(field) {
 
