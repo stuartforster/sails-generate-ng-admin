@@ -7,8 +7,7 @@ Sails, and the [ng-admin](https://github.com/marmelab/ng-admin) Angular app.
 
 ### Installation
 
-`npm install sails-generate-ng-admin`
-
+`npm install git://github.com/zvesp/sails-generate-ng-admin`
 
 ### Usage
 
