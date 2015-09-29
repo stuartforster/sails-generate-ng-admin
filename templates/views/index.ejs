@@ -11,34 +11,17 @@
         var app = angular.module('myApp', ['ng-admin']);
         app.config([
             'NgAdminConfigurationProvider',
-            'Application',
-            'Entity',
-            'Field',
-            'Reference',
-            'ReferencedList',
-            'ReferenceMany',
             'RestangularProvider',
             function(
                     NgAdminConfigurationProvider,
-                    Application,
-                    Entity,
-                    Field,
-                    Reference,
-                    ReferencedList,
-                    ReferenceMany,
                     RestangularProvider
                     ) {
+
+            var nga            = NgAdminConfigurationProvider;
+
             // set the main API endpoint for this admin
-            var app = new Application(<%- jsonAppName %>)
+            var app = nga.application(<%- jsonAppName %>)
                     .baseApiUrl(<%- jsonUri %>);
-
-//            // set the list of fields to map in each post view
-//            book.dashboardView().addField(new Field('title').isDetailLink(true)) //.map(truncate),
-////                new ReferenceMany('tags') // a Reference is a particular type of field that references another entity
-////                        .targetEntity(tag) // the tag entity is defined later in this file
-////                        .targetField(new Field('name')) // the field to be displayed in this list
-////            ]);
-
 
             /**
              * Intercept response from the REST service, to turn nested objects their primary keys.
@@ -64,6 +47,8 @@
                 return response;
             });
 
+
+
             /**
              * Create a Sails-ified ListView for the given entity, i.e. with Sails-y sorting and pagination parameters,
              * and parsing of search-text into a 'where' query parameter, using the queryField(s) supplied.
@@ -73,36 +58,37 @@
             function sailsListView(entity, queryFields) {
                 var listView = entity.listView()
                     // Sorting (ordering) parameters
-                        .sortParams(function (field, dir) {
-                            return {
-                                params: { sort: field + ' ' + String(dir).toLowerCase() },
-                                headers: {}
-                            };
-                        })
+                        // .sortField(function (field, dir) {
+                        //  debugger;
+                        //  return {
+                        //      params: { sort: field + ' ' + String(dir).toLowerCase() },
+                        //      headers: {}
+                        //  };
+                        // })
                     // Pagination parameters
-                        .pagination(function (page, maxPerPage) {
-                            return {
-                                skip: (page - 1) * maxPerPage,
-                                limit: maxPerPage
-                            }
-                        });
+                        // .pagination(function (page, maxPerPage) {
+                        //  return {
+                        //      skip: (page - 1) * maxPerPage,
+                        //      limit: maxPerPage
+                        //  }
+                        // });
 
                 // 'Where' parameters for queries with 'contains'
                 if ('undefined' !== typeof queryFields) {
                     if ('string' === typeof queryFields) {
                         queryFields = [queryFields];
                     }
-                    listView.filterQuery(function (queryText) {
-                        return {
-                            where: JSON.stringify({
-                                or: queryFields.map(function (field) {
-                                    var where = {};
-                                    where[field] = {contains: queryText};
-                                    return where;
-                                })
-                            })
-                        };
-                    });
+                    // listView.filterQuery(function (queryText) {
+                    //  return {
+                    //      where: JSON.stringify({
+                    //          or: queryFields.map(function (field) {
+                    //              var where = {};
+                    //              where[field] = {contains: queryText};
+                    //              return where;
+                    //          })
+                    //      })
+                    //  };
+                    // });
 
                 }
 
@@ -112,8 +98,8 @@
             <% entities.forEach(function(entity) { %>
 
             var <%= entity.varName %> =
-            new Entity(<%- entity.jsonName %>)
-                    .identifier(new Field(<%- entity.jsonIdField %>));
+            nga.entity(<%- entity.jsonName %>)
+                    .identifier(nga.field(<%- entity.jsonIdField %>));
 
             app.addEntity(<%= entity.varName %>);
 
@@ -141,6 +127,25 @@
             <% }); %>
 
             NgAdminConfigurationProvider.configure(app);
+
+            RestangularProvider.addFullRequestInterceptor(function(element, operation, what, url, headers, params, httpConfig) {
+                console.log(JSON.stringify(arguments,null,'\t'))
+                if (operation == 'getList') {
+                    var newParams = {}
+                    // make pagination requests match loopback format
+                    if(params._perPage != -1){
+                        // can use a flag of -1 to remove the pagination. needed for inputs
+                        newParams.skip = (params._page - 1) * params._perPage;
+                        newParams.limit = params._perPage;
+                    }
+                    if(params._sortField != "null"){
+                        newParams.sort = params._sortField + " " + params._sortDir.toLowerCase();
+                    }
+                }
+
+                console.log('requesting: %s with ',url,JSON.stringify(newParams,null,'\t'));
+                return { params: newParams };
+            });
         }]);
     </script>
 </head>

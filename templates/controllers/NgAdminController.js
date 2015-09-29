@@ -114,6 +114,11 @@ module.exports = (function() {
             case 'boolean':
               return 'boolean';
             case 'string':
+              if(field.enum){
+                return "choice";
+              } else {
+                return "string";
+              }
             case 'time':
               return 'string';
             case 'array':
@@ -143,30 +148,39 @@ module.exports = (function() {
 
               // If the 'via' is a foreign key, it's a Many-to-1 Otherwise it's many-to-many.
               // However, for ng-admin, both need to be "ReferenceMany" fields.
-              var referenceType = 'Many'; // field.via && sails.models[field.collection].definition[field.via].foreignKey ? 'dList' : 'Many';
-              return 'Reference' + referenceType + '(' +
+              var referenceType = '_many'; // field.via && sails.models[field.collection].definition[field.via].foreignKey ? 'dList' : 'Many';
+              return 'nga.field(' +
                 JSON.stringify(field.name) +
-                ').targetEntity(' +
+                ',"reference'+referenceType+'").targetEntity(' +
                 varName(field.collection) +
                 ').targetField(' +
-                'new Field(' + JSON.stringify(field.targetField || sails.models[field.collection].primaryKey) + ')' +
+                'nga.field(' + JSON.stringify(field.targetField || sails.models[field.collection].primaryKey) + ')' +
                 ')';
             }
 
             if (field.model) {
-              return 'Reference(' +
+              return 'nga.field(' +
                 JSON.stringify(field.name) +
-                ').targetEntity(' +
+                ',"reference").targetEntity(' +
                 varName(field.model) +
                 ').targetField(' +
-                'new Field(' + JSON.stringify(field.targetField || sails.models[field.model].primaryKey) + ')' +
+                'nga.field(' + JSON.stringify(field.targetField || sails.models[field.model].primaryKey) + ')' +
                 ')';
             }
+            if(ngAdminFieldType(field) === 'choice' && field.enum){
+              var util = require('util');
+              // return 'nga.field(' + JSON.stringify(field.name) + ',' + JSON.stringify(ngAdminFieldType(field)) + ')'+".choices(["+util.inspect(field.enum)+"])";// used util.inspect to get valid string array form
+              var array_of_choices = [];
+              for (var i = 0; i < field.enum.length; i++) {
+                array_of_choices.push({value:field.enum[i],label:field.enum[i]});
+              }
+              return 'nga.field(' + JSON.stringify(field.name) + ',' + JSON.stringify(ngAdminFieldType(field)) + ')'+".choices("+JSON.stringify(array_of_choices)+")";// used util.inspect to get valid string array form
+            }
 
-            return 'Field(' + JSON.stringify(field.name) + ').type(' + JSON.stringify(ngAdminFieldType(field)) + ')';
+            return 'nga.field(' + JSON.stringify(field.name) + ',' + JSON.stringify(ngAdminFieldType(field)) + ')';
           }
 
-          var factory = 'new ' + fieldConstructor(field);
+          var factory = '' + fieldConstructor(field);
 
           if (field.isDetailLink) {
             factory += '.isDetailLink(true)';
@@ -247,11 +261,10 @@ module.exports = (function() {
           }
         );
       }
-
       res.locals.layout = '';
       res.view('ng-admin', {
-        jsonAppName: JSON.stringify('Admin'),
-        jsonUri: JSON.stringify(req.baseUrl),
+        jsonAppName: JSON.stringify('GreenRed Backend Admin Panel'),
+        jsonUri: JSON.stringify(req.baseUrl+sails.config.blueprints.prefix+'/'),
         entities: getEntityDefinitions()
       });
 
