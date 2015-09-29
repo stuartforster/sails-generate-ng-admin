@@ -263,7 +263,7 @@ module.exports = (function() {
       }
       res.locals.layout = '';
       res.view('ng-admin', {
-        jsonAppName: JSON.stringify('GreenRed Backend Admin Panel'),
+        jsonAppName: JSON.stringify('Admin Panel'),
         jsonUri: JSON.stringify(req.baseUrl+sails.config.blueprints.prefix+'/'),
         entities: getEntityDefinitions()
       });
